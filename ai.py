@@ -83,8 +83,11 @@ class LeanComputerPlayer(object):
             reduction = lambda x: (-x.count(self._loss_value)*100 / len(x),
                                    x.count(self._win_value)*100 / len(x))
             outcome = map(reduction, outcome_set)
-            print("Pos Moves:" + str(pos_moves))
-            print("Outcomes: " + str(outcome))
+
+            # Uncomment to see how the algorithm is deciding
+            # print("Pos Moves:" + str(pos_moves))
+            # print("Outcomes: " + str(outcome))
+
             return outcome.index(max(outcome))
 
         # initial scan for all possible moves, sets moves_set_index
