@@ -63,7 +63,7 @@ class LeanComputerPlayer(object):
         def flip(player):
             return 1 if player == 0 else 0
 
-        def descendents(moves, board, player):
+        def descendants(moves, board, player):
             def copy_ret(brd, mv, plyr):
                 new_board = copy.copy(board)
                 new_board[mv] = plyr
@@ -81,7 +81,7 @@ class LeanComputerPlayer(object):
                 else:
                     return (self._draw_value, move)
             else:
-                results = descendents(moves, board, player)
+                results = descendants(moves, board, player)
                 min_or_max = max if player == self.XO else min
                 result = min_or_max(results)
                 return (result[0], move if move is not None else result[1])
