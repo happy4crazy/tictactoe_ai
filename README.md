@@ -5,16 +5,12 @@ Use LeanComputerPlayer vs. ComputerPlayer (the latter is unfinished).
 
 Algorithm
 ----------
-Essentially a minimax algorithm (though I sort of backed into it
-accidently).
+Uses minimax. Assumes opponent always chooses the best path (for it),
+and then makes decisions with that assumption.
 
 Creates a tree of every possible move and every possible countermove.
-At the end, find the proportion of times a specific next move causes
-the AI to lose, and the proportion of times that move causes the AI
-to win. 
-
-The AI minimizes the proportion of times it loses and then tiebreaks
-by maximizing the proportion of times it wins.
+Assuming that the opponent choses best path each time, AI chooses path
+that maximizes outcomes for itself.
 
 Board Representation
 ---------
