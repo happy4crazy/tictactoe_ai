@@ -13,6 +13,7 @@
 
 import math
 import sys
+import ai
 
 
 class Grid:
@@ -134,6 +135,9 @@ class GameNotOver(Exception):
 class GameInterface:
     """Textual interface for Tic-Tac-Toe game."""
     game = 0
+    ai = False
+    ai_player = 0
+    comp = None
 
     def __init__(self):
         self.game = self.main_menu()
@@ -170,6 +174,28 @@ class GameInterface:
         selected = self.print_menu()
         if not selected:
             return False
+        elif selected == 2:
+            self.ai = True
+            repeat_select = True
+            select = 1
+
+            while repeat_select:
+                print("\nWould you like to be X or O?")
+                print("1) O")
+                print("2) X")
+                try:
+                    select = int(raw_input("Enter selection: "))
+                    if select != 1 and select != 2:
+                        print("Invalid selection.")
+                    else:
+                        repeat_select = False
+                except ValueError:
+                    print("Invalid selection.")
+
+            if select == 1:
+                self.ai_player = 1
+            else:
+                self.ai_player = 0
 
         return self.select_grid()
 
@@ -181,17 +207,18 @@ class GameInterface:
         while repeat_menu:
             print("Menu selection")
             print("1) New Game")
-            print("2) Quit")
+            print("2) AI Game")
+            print("3) Quit")
             try:
                 select = int(raw_input("Enter selection: "))
-                if select != 1 and select != 2:
+                if select != 1 and select != 2 and select != 3:
                     print("Invalid selection.")
                 else:
                     repeat_menu = False
             except ValueError:
                 print("Invalid selection.")
 
-        if select == 2:
+        if select == 3:
             return False  # quit
         else:
             return select
@@ -224,6 +251,11 @@ class GameInterface:
             except ValueError:
                 print("Invalid selection.")
 
+        if self.ai:
+            self.comp = ai.LeanComputerPlayer([-1 for i in range(grid_size)],
+                                              grid_size,
+                                              self.ai_player)
+
         return Grid(grid_size, grid_size)
 
     def run_game(self):
@@ -238,22 +270,30 @@ class GameInterface:
         else:
             while running:
                 player = 'O' if turn % 2 == 0 else 'X'
+                ai_repr = 1 if player == 'X' else 0
                 self.print_game()
-                print("Player {}'s turn.".format(player)),
-                print("Pick row and column to tick (q to quit)")
-                row, col = 0, 0
+                print("Player {}'s turn.".format(player))
+                if not self.ai or self.ai_player != ai_repr:
+                    print("Pick row and column to tick (q to quit)")
+                    row, col = 0, 0
 
-                row = self.take_row_col("row", self.game.max_row)
-                if not row:  # user selected q
-                    print(end_message)
-                    return False
+                    row = self.take_row_col("row", self.game.max_row)
+                    if not row:  # user selected q
+                        print(end_message)
+                        return False
 
-                col = self.take_row_col("col", self.game.max_col)
-                if not col:
-                    print(end_message)
-                    return False
+                    col = self.take_row_col("col", self.game.max_col)
+                    if not col:
+                        print(end_message)
+                        return False
+                else:
+                    self.comp.update_board(self._convert_board_for_ai())
+                    ai_move = self.comp.next_move()
+                    row, col = self._convert_ai_move(ai_move)
 
-                filled = self.game.fill_cell(int(row) - 1, int(col) - 1, player)
+                filled = self.game.fill_cell(int(row) - 1,
+                                             int(col) - 1,
+                                             player)
 
                 if filled:
                     turn += 1
@@ -271,7 +311,8 @@ class GameInterface:
     def end_game(self, turn):
         """Takes a turn number. Runs appropriate end-game messages, based on
         status (if there is a winner or if game has exceeded its max number of
-        turns. Asks user whether or not to play again and returns True if yes, False if no.
+        turns. Asks user whether or not to play again and returns True if yes,
+        False if no.
 
         Raises GameNotOver Exception if game isn't over.
 
@@ -295,8 +336,8 @@ class GameInterface:
                     return False
             except ValueError:
                 return False
-        else: raise GameNotOver("Game isn't over.")
-
+        else:
+            raise GameNotOver("Game isn't over.")
 
     def take_row_col(self, row_or_col, max_row_or_col):
         """Takes string 'row' or 'col' and max number of rows or columns. Takes
@@ -327,6 +368,19 @@ class GameInterface:
                 print("Invalid input, try again.")
 
         return user_selection
+
+    def _convert_board_for_ai(self):
+        convert = {'-': -1, 'X': 1, 'O': 0}
+        ai_board = []
+        for row in range(self.game.max_row):
+            for col in range(self.game.max_col):
+                ai_board.append(convert[self.game.cells[row][col]])
+        return ai_board
+
+    def _convert_ai_move(self, move):
+        row = move / self.game.max_row
+        col = move % self.game.max_row
+        return (row + 1, col + 1)
 
 
 def main():
