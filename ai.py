@@ -54,50 +54,39 @@ class LeanComputerPlayer(object):
 
         """
         pos_moves = self._pos_moves(self._board)
-        outcome_set = [[] for i in range(len(pos_moves))]
+        outcome_val = {self.XO: self._win_value,
+                       1 if self.XO == 0 else 0: self._loss_value}
 
         if len(pos_moves) == self._max_row**2:
-            return self._find_center()
+            return (self._max_row**2 - 1) / 2  # return center
 
-        def find_move(move_set_index, board, player):
-            # move_set_index represents index of next move in pos_moves
-            # board is the new board, player is 1 or 0 for X and O resp.
+        def flip(player):
+            return 1 if player == 0 else 0
+
+        def descendents(moves, board, player):
+            def copy_ret(brd, mv, plyr):
+                new_board = copy.copy(board)
+                new_board[mv] = plyr
+                return new_board
+
+            return [solve_tree(copy_ret(board, mv, player), flip(player), mv)
+                    for mv in moves]
+
+        def solve_tree(board, player, move=None):
             moves = self._pos_moves(board)
             winner = self._winner(board)
             if moves == [] or winner is not False:
-                if winner is self.XO:
-                    outcome_set[move_set_index].append(self._win_value)
-                elif winner is not False:
-                    outcome_set[move_set_index].append(self._loss_value)
+                if winner is not False:
+                    return (outcome_val[winner], move)
                 else:
-                    outcome_set[move_set_index].append(self._draw_value)
+                    return (self._draw_value, move)
             else:
-                for move in moves:
-                    new_board = copy.deepcopy(board)
-                    new_board[move] = player
-                    find_move(move_set_index, new_board,
-                              self._flip_player(player))
+                results = descendents(moves, board, player)
+                min_or_max = max if player == self.XO else min
+                result = min_or_max(results)
+                return (result[0], move if move is not None else result[1])
 
-        def get_indexOf_minimax_move():
-            # minimize loss ratio, tiebreak with higher win ratio
-            reduction = lambda x: (-x.count(self._loss_value)*100 / len(x),
-                                   x.count(self._win_value)*100 / len(x))
-            outcome = map(reduction, outcome_set)
-
-            # Uncomment to see how the algorithm is deciding
-            # print("Pos Moves:" + str(pos_moves))
-            # print("Outcomes: " + str(outcome))
-
-            return outcome.index(max(outcome))
-
-        # initial scan for all possible moves, sets moves_set_index
-        for move in pos_moves:
-            new_board = copy.deepcopy(self._board)
-            new_board[move] = self.XO
-            find_move(pos_moves.index(move), new_board,
-                      self._flip_player(self.XO))
-
-        return pos_moves[get_indexOf_minimax_move()]
+        return solve_tree(self._board, self.XO)[1]
 
     def move(self):
         """ai.LeanComputerPlayer.move:: move()
@@ -109,12 +98,6 @@ class LeanComputerPlayer(object):
         the_move = self.next_move()
         self._board[the_move] = self.XO
         return the_move
-
-    def _flip_player(self, player):
-        return 1 if player == 0 else 0
-
-    def _find_center(self):
-        return (self._max_row**2 - 1) / 2  # breaks if board is even
 
     def _winner(self, board):
         num_win = self._to_win
