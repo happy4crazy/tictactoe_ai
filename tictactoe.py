@@ -18,11 +18,6 @@ import ai
 
 class Grid:
     """Represents gameboard, can be called to fill individual cells"""
-    cells = []
-    max_row = 0
-    max_col = 0
-    _victory_routes = []  # represents each way to win (rows + cols + 2 diags)
-    _connects_to_win = 0
 
     def __init__(self, rows, cols):
         """Initializes grid with the appropriate number of rows and columns
